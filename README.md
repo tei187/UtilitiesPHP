@@ -14,7 +14,7 @@
 | [Utilities::scandir_clean](#Utilitiesscandir_clean) | Works as `scandir()` but removes relative and parent dots pointers. |
 | [Utilities::trim_path](#Utilitiestrim_path) | Trims and removes errorenous path parts, forbids relative directory tree traversal. |
 | [Utilities::array_values_not_null](#Utilitiesarray_values_not_null) | Recursively check if any of the values is empty. |
-| [Utilities::array_column_recursive](#Utilitiesarray_column_recursive) |  |
+| [Utilities::array_column_recursive](#Utilitiesarray_column_recursive) | Gets column from array recursively. |
 | [Utilities::array_clear](#Utilitiesarray_clear) | All values to `null`, leave key/index structure as-is. |
 | [Utilities::array_map_recursive](#Utilitiesarray_map_recursive) | Recursive `array_map()` function. |
 | [Utilities::array_filter_recursive](#Utilitiesarray_filter_recursive) | Leaves integers, floats and bools that otherwise may be considered empty (0 or FALSE). |
@@ -24,6 +24,7 @@
 | [Utilities::file_exists_suggest](#Utilitiesfile_exists_suggest) | Filename suggestion if path already used. |
 | [Utilities::copy_directory](#Utilitiescopy_directory) | Copy directory with files from one path to another. |
 | [Utilities::is_object_of_class](#Utilitiesis_object_of_class) | Checks if passed variable is of a specific class. |
+| [Utilities::not_outside_document_root](#Utilitiesnot_outside_document_root) | Checks if path is not outside of document root, as specified in *$_SERVER[&#039;DOCUMENT_ROOT&#039;]*. |
 | [Utilities::proper_class_name](#Utilitiesproper_class_name) | Checks if class name is proper to be used with PHP. |
 | [Utilities::proper_property_name](#Utilitiesproper_property_name) | Check if name can be used as a variable/property name. |
 | [Utilities::safechars](#Utilitiessafechars) | Strips string from characters considered not safe. |
@@ -85,8 +86,8 @@ Utilities::array_values_recursive( array array, bool unique = false ): array
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `array` | **array** |  |
-| `unique` | **bool** |  |
+| `array` | **array** | Input array. |
+| `unique` | **bool** | Flag switch. If TRUE returns only unique values. |
 
 
 **Return Value:**
@@ -111,7 +112,7 @@ Utilities::array_filter_values_recursive( array array, bool strict = true, bool 
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `array` | **array** |  |
+| `array` | **array** | Input array. |
 | `strict` | **bool** | Flag. If true, removes only `NULL` and strings which after trimming equal to `` or length is 0. If false, compares by default `empty()` function. |
 | `unique` | **bool** | If true returns only unique values. |
 
@@ -137,7 +138,7 @@ Utilities::Host(  ): string
 
 **Return Value:**
 
-
+Formatted string [http|https]://domain:port
 
 
 
@@ -147,7 +148,7 @@ Utilities::Host(  ): string
 Encodes email address to entities.
 
 ```php
-Utilities::EncodeEmail( string e ): string|null
+Utilities::EncodeEmail( string email ): string|null
 ```
 
 
@@ -157,7 +158,7 @@ Utilities::EncodeEmail( string e ): string|null
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `e` | **string** | Email address. |
+| `email` | **string** | Email address. |
 
 
 **Return Value:**
@@ -172,7 +173,7 @@ Utilities::EncodeEmail( string e ): string|null
 Validates email address.
 
 ```php
-Utilities::ValidateEmail( string e ): string|false
+Utilities::ValidateEmail( string email ): string|false
 ```
 
 
@@ -182,7 +183,7 @@ Utilities::ValidateEmail( string e ): string|false
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `e` | **string** |  |
+| `email` | **string** | Email address. |
 
 
 **Return Value:**
@@ -207,13 +208,13 @@ Utilities::scandir_clean( string path, bool fullpaths = false ): array
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `path` | **string** |  |
+| `path` | **string** | Path to scan. |
 | `fullpaths` | **bool** | If `TRUE` returns entire path to resource. `FALSE` by default, returning only files and directory names. |
 
 
 **Return Value:**
 
-
+Array of paths.
 
 
 
@@ -223,7 +224,7 @@ Utilities::scandir_clean( string path, bool fullpaths = false ): array
 Trims and removes errorenous path parts, forbids relative directory tree traversal.
 
 ```php
-Utilities::trim_path( string v, bool restrictDots = true ): mixed
+Utilities::trim_path( string path, bool restrictDots = true ): mixed
 ```
 
 
@@ -233,8 +234,8 @@ Utilities::trim_path( string v, bool restrictDots = true ): mixed
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `v` | **string** |  |
-| `restrictDots` | **bool** |  |
+| `path` | **string** | Input path. |
+| `restrictDots` | **bool** | Flag. If TRUE removes traversal and relative dots (`..`, `.`) from input path. |
 
 
 **Return Value:**
@@ -259,9 +260,9 @@ Utilities::array_values_not_null( array array, bool pathContext = false, bool re
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `array` | **array** |  |
-| `pathContext` | **bool** |  |
-| `restrictDots` | **bool** |  |
+| `array` | **array** | Input array. |
+| `pathContext` | **bool** | Flag. If TRUE treats items as paths. |
+| `restrictDots` | **bool** | Flag. If TRUE removes traversal and relative dots (`..`, `.`) from input path. |
 
 
 **Return Value:**
@@ -273,7 +274,7 @@ Utilities::array_values_not_null( array array, bool pathContext = false, bool re
 ---
 ### Utilities::array_column_recursive
 
-
+Gets column from array recursively.
 
 ```php
 Utilities::array_column_recursive( array haystack, mixed needle ): array
@@ -305,7 +306,7 @@ Utilities::array_column_recursive( array haystack, mixed needle ): array
 All values to `null`, leave key/index structure as-is.
 
 ```php
-Utilities::array_clear( array a ): array
+Utilities::array_clear( array array ): array
 ```
 
 
@@ -315,7 +316,7 @@ Utilities::array_clear( array a ): array
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `a` | **array** |  |
+| `array` | **array** |  |
 
 
 **Return Value:**
@@ -330,7 +331,7 @@ Utilities::array_clear( array a ): array
 Recursive `array_map()` function.
 
 ```php
-Utilities::array_map_recursive( array &arr, callable fn ): array
+Utilities::array_map_recursive( array &array, callable fn ): array
 ```
 
 
@@ -340,7 +341,7 @@ Utilities::array_map_recursive( array &arr, callable fn ): array
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `arr` | **array** |  |
+| `array` | **array** |  |
 | `fn` | **callable** |  |
 
 
@@ -356,7 +357,7 @@ Utilities::array_map_recursive( array &arr, callable fn ): array
 Leaves integers, floats and bools that otherwise may be considered empty (0 or FALSE).
 
 ```php
-Utilities::array_filter_recursive( array arr ): array
+Utilities::array_filter_recursive( array array ): array
 ```
 
 
@@ -366,7 +367,7 @@ Utilities::array_filter_recursive( array arr ): array
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `arr` | **array** |  |
+| `array` | **array** |  |
 
 
 **Return Value:**
@@ -391,8 +392,8 @@ Useful for verifying if structure is correct.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `keys` | **array** |  |
-| `array` | **array** |  |
+| `keys` | **array** | Array with items with values corresponding to keys to check against. |
+| `array` | **array** | Array to check keys against. |
 
 
 **Return Value:**
@@ -442,12 +443,12 @@ Utilities::array_only_bool_true( array array ): bool
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `array` | **array** |  |
+| `array` | **array** | Array to check. |
 
 
 **Return Value:**
 
-True if only `true` boolean, false if other found.
+`TRUE` if only `true` boolean, `FALSE` if other found.
 
 
 
@@ -467,9 +468,9 @@ Utilities::file_exists_suggest( string path, string suggestType = 'timestamp', b
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `path` | **string** |  |
+| `path` | **string** | Path to check. |
 | `suggestType` | **string** | Can be `&#039;timestamp&#039;` or `&#039;iterator&#039;`. |
-| `returnPath` | **bool** |  |
+| `returnPath` | **bool** | If `TRUE` returns entire path to file, if `FALSE` only the filename. `FALSE` by default. |
 
 
 **Return Value:**
@@ -484,18 +485,19 @@ Suggested filename or path to it, otherwise `FALSE`.
 Copy directory with files from one path to another.
 
 ```php
-Utilities::copy_directory( string from, string to ): bool
+Utilities::copy_directory( string from, string to, bool limitRoot = true ): bool
 ```
 
-**WARNING:** it is not app-dir limited, so picking "/" for form will start copying your root path.
+**WARNING:** it is not app-dir limited, so picking "/" for from will start copying your root path.
 
 * This method is **static**.
 **Parameters:**
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `from` | **string** |  |
-| `to` | **string** |  |
+| `from` | **string** | Path to copy from. |
+| `to` | **string** | Path to copy to. |
+| `limitRoot` | **bool** | Flag. |
 
 
 **Return Value:**
@@ -531,6 +533,32 @@ If not object or not an object of specified class, returns `FALSE`. Otherwise `T
 
 
 ---
+### Utilities::not_outside_document_root
+
+Checks if path is not outside of document root, as specified in *$_SERVER['DOCUMENT_ROOT']*.
+
+```php
+Utilities::not_outside_document_root( string path = "", bool restrictDots = true ): bool
+```
+
+
+
+* This method is **static**.
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `path` | **string** | Path to check. |
+| `restrictDots` | **bool** | Flag. If `TRUE` removes traversal and relative dots (`..`, `.`) from input path. |
+
+
+**Return Value:**
+
+
+
+
+
+---
 ### Utilities::proper_class_name
 
 Checks if class name is proper to be used with PHP.
@@ -546,7 +574,7 @@ Utilities::proper_class_name( string name ): bool
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `name` | **string** |  |
+| `name` | **string** | Class name to check. |
 
 
 **Return Value:**
@@ -571,7 +599,7 @@ Utilities::proper_property_name( string name ): bool
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `name` | **string** |  |
+| `name` | **string** | Property name to check. |
 
 
 **Return Value:**
@@ -589,14 +617,14 @@ Strips string from characters considered not safe.
 Utilities::safechars( mixed text ): string
 ```
 
-
+Replaces "..", "/", "\\", ":", "*", "?", '"', "<", ">", "|", ";" with "-".
 
 * This method is **static**.
 **Parameters:**
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `text` | **mixed** |  |
+| `text` | **mixed** | Input text. |
 
 
 **Return Value:**
@@ -621,7 +649,7 @@ Utilities::MimeByExtension( string ext ): string
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `ext` | **string** |  |
+| `ext` | **string** | Extension. |
 
 
 **Return Value:**
@@ -701,7 +729,7 @@ Utilities::GetFilesFromPathRecursive( mixed path ): array
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `path` | **mixed** |  |
+| `path` | **mixed** | Path. |
 
 
 **Return Value:**
@@ -755,8 +783,8 @@ Utilities::GetDirectoriesFromPath( mixed path, bool fullPaths = false ): array
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `path` | **mixed** |  |
-| `fullPaths` | **bool** |  |
+| `path` | **mixed** | Path. |
+| `fullPaths` | **bool** | If `TRUE` returns entire path to resource. `FALSE` by default, returning only directory names. |
 
 
 **Return Value:**
@@ -771,7 +799,7 @@ Utilities::GetDirectoriesFromPath( mixed path, bool fullPaths = false ): array
 Removes files and directories recursively.
 
 ```php
-Utilities::rmdir_files_recursive( mixed path ): void
+Utilities::rmdir_files_recursive( mixed path, bool limitRoot = true ): void
 ```
 
 
@@ -781,7 +809,8 @@ Utilities::rmdir_files_recursive( mixed path ): void
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `path` | **mixed** |  |
+| `path` | **mixed** | Path. |
+| `limitRoot` | **bool** |  |
 
 
 **Return Value:**

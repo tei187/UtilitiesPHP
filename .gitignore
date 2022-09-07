@@ -1,3 +1,4 @@
 /vendor/
 phpDocumentor.phar
 .phpdoc/
+docs/

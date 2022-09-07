@@ -55,8 +55,8 @@ class Utilities {
     /**
      * Lists values in array recursively.
      *
-     * @param array $array
-     * @param boolean $unique
+     * @param array $array Input array.
+     * @param boolean $unique Flag switch. If TRUE returns only unique values.
      * @return array
      */
     static function array_values_recursive(array $array, bool $unique = false) : array {
@@ -76,7 +76,7 @@ class Utilities {
     /**
      * Filters values obtained recurisvely from an array.
      *
-     * @param array $array
+     * @param array $array Input array.
      * @param boolean $strict Flag. If true, removes only `NULL` and strings which after trimming equal to `` or length is 0. If false, compares by default `empty()` function.
      * @param boolean $unique If true returns only unique values.
      * @return array
@@ -112,7 +112,7 @@ class Utilities {
     /**
      * Return full host address.
      *
-     * @return string
+     * @return string Formatted string [http|https]://domain:port
      */
     static function Host() : string {
         return $_ENV['HOST_PROTOCOL'] . "://"
@@ -126,17 +126,17 @@ class Utilities {
     /**
      * Encodes email address to entities.
      *
-     * @param string $e Email address.
+     * @param string $email Email address.
      * @return string|null
      */
-    static function EncodeEmail(?string $e) {
+    static function EncodeEmail(?string $email) {
         $output = null;
 
-        if(empty($e))
+        if(empty($email))
             return $output;
 
-        for ($i = 0; $i < strlen($e); $i++) { 
-            $output .= '&#'.ord($e[$i]).';'; 
+        for ($i = 0; $i < strlen($email); $i++) { 
+            $output .= '&#'.ord($email[$i]).';'; 
         }
 
         return $output;
@@ -145,19 +145,19 @@ class Utilities {
     /**
      * Validates email address.
      *
-     * @param string $e
+     * @param string $email Email address.
      * @return string|false
      */
-    static function ValidateEmail(string $e) {
-        return filter_var($e, FILTER_VALIDATE_EMAIL);
+    static function ValidateEmail(string $email) {
+        return filter_var($email, FILTER_VALIDATE_EMAIL);
     }
 
     /**
      * Works as `scandir()` but removes relative and parent dots pointers.
      *
-     * @param string $path
+     * @param string $path Path to scan.
      * @param boolean $fullpaths If `TRUE` returns entire path to resource. `FALSE` by default, returning only files and directory names.
-     * @return array
+     * @return array Array of paths.
      */
     static function scandir_clean(string $path, bool $fullpaths = false) : array {
         $path = realpath($path);
@@ -182,25 +182,29 @@ class Utilities {
     /**
      * Trims and removes errorenous path parts, forbids relative directory tree traversal.
      *
-     * @param string $v
-     * @param boolean $restrictDots
+     * @param string $path Input path.
+     * @param boolean $restrictDots Flag. If TRUE removes traversal and relative dots (`..`, `.`) from input path.
      * @return mixed
      */
-    static function trim_path(string $v, bool $restrictDots = true) {
-        $v = trim($v, " \t\n\r\x0B");
+    static function trim_path(string $path, bool $restrictDots = true) {
+        $path = trim($path, " \t\n\r\x0B");
         
         if($restrictDots) {
-            $v = trim($v, ".");
-            $v = str_replace(['../', '..\\', '..'], "", $v);
+            $path = trim($path, ".");
+            $path = str_replace(['../', '..\\', '..'], "", $path);
         }
 
-        return $v;
+        return $path;
     }
 
     /**
      * Recursively check if any of the values is empty.
      *
-     * @param array $array
+     * @todo what is this all about? something is off with forach and $output
+     * 
+     * @param array $array Input array.
+     * @param boolean $pathContext Flag. If TRUE treats items as paths.
+     * @param boolean $restrictDots Flag. If TRUE removes traversal and relative dots (`..`, `.`) from input path.
      * @return boolean
      */
     static function array_values_not_null(array $array, bool $pathContext = false, bool $restrictDots = false) : bool {
@@ -222,6 +226,8 @@ class Utilities {
     }
 
     /**
+     * Gets column from array recursively.
+     * 
      * @link https://github.com/NinoSkopac/array_column_recursive
      *
      * @param array $haystack
@@ -240,25 +246,25 @@ class Utilities {
     /**
      * All values to `null`, leave key/index structure as-is.
      *
-     * @param array $a
+     * @param array $array
      * @return array
      */
-    static function array_clear(array $a) : array {
+    static function array_clear(array $array) : array {
         array_walk_recursive(
-            $a, 
+            $array, 
             function($item, $key) { return $item = null; }
         );
-        return $a;
+        return $array;
     }
 
     /**
      * Recursive `array_map()` function.
      *
-     * @param array $arr
+     * @param array $array
      * @param callback $fn
      * @return array
      */
-    static function array_map_recursive(&$arr, $fn) : array {
+    static function array_map_recursive(&$array, $fn) : array {
         return array_map(
             function($item) use($fn){
                 return 
@@ -266,23 +272,23 @@ class Utilities {
                         ? self::array_map_recursive($item, $fn) 
                         : $fn($item);
             }, 
-            $arr);
+            $array);
     }
 
     /**
      * Leaves integers, floats and bools that otherwise may be considered empty (0 or FALSE).
      *
-     * @param array $arr
+     * @param array $array
      * @return array
      */
-    static function array_filter_recursive($arr) {
-        foreach($arr as $key => $item) {
+    static function array_filter_recursive(array $array) : array {
+        foreach($array as $key => $item) {
             if(empty($item) && !is_array($item) && !is_int($item) && !is_bool($item) && !is_float($item)) {
                 unset($arr[$key]);
             }
 
             if(is_array($item)) {
-                $arr[$key] = self::array_filter_recursive($arr[$key]);
+                $arr[$key] = self::array_filter_recursive($array[$key]);
             }
         }
 
@@ -294,8 +300,8 @@ class Utilities {
      * 
      * Useful for verifying if structure is correct.
      *
-     * @param array $keys
-     * @param array $array
+     * @param array $keys Array with items with values corresponding to keys to check against.
+     * @param array $array Array to check keys against.
      * @return boolean
      */
     static function array_keys_exist(array $keys, array $array) : bool {
@@ -323,8 +329,8 @@ class Utilities {
     /**
      * Checks if every value in array is a `true` boolean type.
      *
-     * @param array $array
-     * @return boolean True if only `true` boolean, false if other found.
+     * @param array $array Array to check.
+     * @return boolean `TRUE` if only `true` boolean, `FALSE` if other found.
      */
     static function array_only_bool_true(array $array) : bool {
         if(!empty($array)) {
@@ -351,9 +357,9 @@ class Utilities {
      *
      * @todo check if file exists
      * 
-     * @param string $path
+     * @param string $path Path to check.
      * @param string $suggestType Can be `'timestamp'` or `'iterator'`.
-     * @param boolean $returnPath
+     * @param boolean $returnPath If `TRUE` returns entire path to file, if `FALSE` only the filename. `FALSE` by default.
      * @return string|false Suggested filename or path to it, otherwise `FALSE`.
      */
     static function file_exists_suggest(string $path, string $suggestType = 'timestamp', bool $returnPath = false) {
@@ -404,13 +410,19 @@ class Utilities {
     /**
      * Copy directory with files from one path to another.
      * 
-     * **WARNING:** it is not app-dir limited, so picking "/" for form will start copying your root path.
+     * **WARNING:** it is not app-dir limited, so picking "/" for from will start copying your root path.
      *
-     * @param string $from
-     * @param string $to
-     * @return bool
+     * @param string $from Path to copy from.
+     * @param string $to Path to copy to.
+     * @param boolean $limitRoot Flag.
+     * @return boolean
      */
-    static function copy_directory(string $from, string $to) {
+    static function copy_directory(string $from, string $to, bool $limitRoot = true) : bool {
+        if($limitRoot) {
+            if(!self::not_outside_document_root($from) || !self::not_outside_document_root($to))
+                return false;
+        }
+
         if(is_dir($from)) {
             $from = realpath($from);
             $to = rtrim(str_replace("/", "\\", self::trim_path($to)), "\\/");
@@ -422,8 +434,6 @@ class Utilities {
                 foreach($files as $file) {
                     if(!copy($from . "/" . $file, $to . "/" . $file)) {
                         $check[] = "Could not copy " . $from . "/" . $file;
-                    } else {
-                        //echo "FILE ", $from . "/" . $file, " >>> ", $to . "/" . $file, PHP_EOL;
                     }
                 }
 
@@ -433,7 +443,6 @@ class Utilities {
                         $check[] = "Could not create" . $to . "/" . $directoryTo;
                     } else {
                         $t = self::copy_directory($from . "/" . $directoryTo, $to . "/" . $directoryTo);
-                        //echo "DIR ", $from . "/" . $directoryTo, " >>> ", $to . "/" . $directoryTo, PHP_EOL;
                         if($t !== true) {
                             $check = array_merge($check, $t);
                         }
@@ -441,8 +450,6 @@ class Utilities {
                 }
             }
         }
-
-        //print_r($check);
 
         return
             empty($check)
@@ -457,7 +464,7 @@ class Utilities {
      * @param string $class Class name.
      * @return boolean If not object or not an object of specified class, returns `FALSE`. Otherwise `TRUE`.
      */
-    static function is_object_of_class($obj, string $class) {
+    static function is_object_of_class($obj, string $class) : bool {
         return 
             is_object($obj) && get_class($obj) == $class
                 ? true
@@ -465,9 +472,31 @@ class Utilities {
     }
 
     /**
+     * Checks if path is not outside of document root, as specified in *$_SERVER['DOCUMENT_ROOT']*.
+     *
+     * @param string $path Path to check.
+     * @param boolean $restrictDots Flag. If `TRUE` removes traversal and relative dots (`..`, `.`) from input path.
+     * @return boolean
+     */
+    static function not_outside_document_root(string $path = "", bool $restrictDots = true) : bool {
+        $path     = self::trim_path($path, $restrictDots);
+        $path     = trim(preg_replace('/[\\/]+/', "/", $path));
+        $realpath = realpath($path);
+
+        return
+            in_array($path, ["/", "\\"])
+                ? false
+                : (
+                    strpos($realpath, $_SERVER['DOCUMENT_ROOT']) !== 0
+                        ? false
+                        : true
+                );
+    }
+
+    /**
      * Checks if class name is proper to be used with PHP.
      *
-     * @param string $name
+     * @param string $name Class name to check.
      * @return boolean
      */
     static function proper_class_name(string $name) : bool {
@@ -480,7 +509,7 @@ class Utilities {
     /**
      * Check if name can be used as a variable/property name.
      *
-     * @param string $name
+     * @param string $name Property name to check.
      * @return boolean
      */
     static function proper_property_name($name) : bool {
@@ -492,21 +521,25 @@ class Utilities {
 
     /**
      * Strips string from characters considered not safe.
+     * 
+     * Replaces "..", "/", "\\", ":", "*", "?", '"', "<", ">", "|", ";" with "-".
      *
-     * @param mixed $text
+     * @param mixed $text Input text.
      * @return string
      */
-    static function safechars($text) {
+    static function safechars($text) : string {
         return str_replace([ "..", "/", "\\", ":", "*", "?", '"', "<", ">", "|", ";" ], "-", $text);
     }
     
     /**
      * Returns some epxected MIME-types by file extension.
      *
-     * @param string $ext
+     * @param string $ext Extension.
      * @return string
      */
     static function MimeByExtension(string $ext) : string {
+        $ext = trim($ext, "\t\n\r\0\x0B .");
+
         $mime = "application/x-empty";
         
         switch(strtolower($ext)) {
@@ -560,7 +593,7 @@ class Utilities {
     /**
      * Return all files from given path recursively.
      *
-     * @param mixed $path
+     * @param mixed $path Path.
      * @return array
      */
     static function GetFilesFromPathRecursive($path) : array {
@@ -586,8 +619,8 @@ class Utilities {
     /**
      * Returns directories from given path.
      *
-     * @param mixed $path
-     * @param boolean $fullPaths
+     * @param mixed $path Path.
+     * @param boolean $fullPaths If `TRUE` returns entire path to resource. `FALSE` by default, returning only directory names.
      * @return array
      */
     static function GetDirectoriesFromPath($path, bool $fullPaths = false) : array {
@@ -609,24 +642,26 @@ class Utilities {
     /**
      * Removes files and directories recursively.
      *
-     * @param mixed $path
+     * @param mixed $path Path.
+     * @param bool Flag. If `TRUE` will check if the script is in scope of document root.
      * @return void
      */
-    static function rmdir_files_recursive($path) {
-        $path = realpath(self::trim_path($path));
+    static function rmdir_files_recursive($path, bool $limitRoot = true) {        
+        $path = realpath(self::trim_path($path, true));
+        $limitRoot
+            ? (
+                self::not_outside_document_root($path)
+                    ? null
+                    : $path = false
+              )
+            : null;
 
         if($path !== false) {
             $files = self::scandir_clean_files($path, true);
-            $dirs = self::scandir_clean_dirs($path, true);
+            $dirs  = self::scandir_clean_dirs($path, true);
 
-            foreach($files as $file) {
-                unlink($file);
-            }
-
-            foreach($dirs as $dir) {
-                rmdir($dir);
-            }
-
+            foreach($files as $file) { unlink($file); }
+            foreach($dirs as $dir)   { rmdir($dir); }
             rmdir($path);
         }
     }
