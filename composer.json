@@ -1,0 +1,18 @@
+{
+    "name": "tei187/utilities-php",
+    "description": "Additional PHP functions.",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Tei187\\UtilitiesPhp\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "tei187",
+            "email": "bonk.piotr@gmail.com"
+        }
+    ],
+    "require": {}
+}
