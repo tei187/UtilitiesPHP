@@ -5,7 +5,7 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Tei187\\Utilities\\": "src/"
+            "tei187\\Utilities\\": "src/Utilities.php"
         }
     },
     "authors": [
