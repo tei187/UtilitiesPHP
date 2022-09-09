@@ -284,15 +284,15 @@ class Utilities {
     static function array_filter_recursive(array $array) : array {
         foreach($array as $key => $item) {
             if(empty($item) && !is_array($item) && !is_int($item) && !is_bool($item) && !is_float($item)) {
-                unset($arr[$key]);
+                unset($array[$key]);
             }
 
             if(is_array($item)) {
-                $arr[$key] = self::array_filter_recursive($array[$key]);
+                $array[$key] = self::array_filter_recursive($array[$key]);
             }
         }
 
-        return $arr;
+        return $array;
     }
 
     /**
