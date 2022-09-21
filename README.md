@@ -25,7 +25,10 @@
 | [Utilities::Host](#UtilitiesHost) | Return full host address. |
 | [Utilities::is_object_of_class](#Utilitiesis_object_of_class) | Checks if passed variable is of a specific class. |
 | [Utilities::MimeByExtension](#UtilitiesMimeByExtension) | Returns some epxected MIME-types by file extension. |
+| [Utilities::modTime](#UtilitiesmodTime) | Retrieves modification time from given file. |
 | [Utilities::not_outside_document_root](#Utilitiesnot_outside_document_root) | Checks if path is not outside of document root, as specified in *$_SERVER[&#039;DOCUMENT_ROOT&#039;]*. |
+| [Utilities::outside_document_root](#Utilitiesoutside_document_root) | Alias of inverted `self::not_outside_document_root` :D |
+| [Utilities::get_absolute_path](#Utilitiesget_absolute_path) | Returns absolute path based on input. Does not verify whether the path exists or not. |
 | [Utilities::proper_class_name](#Utilitiesproper_class_name) | Checks if class name is proper to be used with PHP. |
 | [Utilities::proper_property_name](#Utilitiesproper_property_name) | Check if name can be used as a variable/property name. |
 | [Utilities::rmdir_files_recursive](#Utilitiesrmdir_files_recursive) | Removes files and directories recursively. |
@@ -562,12 +565,39 @@ Utilities::MimeByExtension( string ext ): string
 
 
 ---
+### Utilities::modTime
+
+Retrieves modification time from given file.
+
+```php
+Utilities::modTime( string path, bool formatted = false, bool pathSafe = true ): string|int|false
+```
+
+
+
+* This method is **static**.
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `path` | **string** | Path to resource. |
+| `formatted` | **bool** | If `formatted` set to true, if `true` will return as a `Y-m-d_His` formatted string, otherwise `Y-m-d, H:i:s` formatted string. |
+| `pathSafe` | **bool** |  |
+
+
+**Return Value:**
+
+String or integer if found, false if file does not exist.
+
+
+
+---
 ### Utilities::not_outside_document_root
 
 Checks if path is not outside of document root, as specified in *$_SERVER['DOCUMENT_ROOT']*.
 
 ```php
-Utilities::not_outside_document_root( string path = "", bool restrictDots = true ): bool
+Utilities::not_outside_document_root( string path = "", string|null basePath = null, bool restrictDots = true ): bool
 ```
 
 
@@ -578,7 +608,66 @@ Utilities::not_outside_document_root( string path = "", bool restrictDots = true
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `path` | **string** | Path to check. |
+| `basePath` | **string\|null** | Base path to check against. If `null` will use `$_SERVER[&#039;DOCUMENT_ROOT]` instead. |
 | `restrictDots` | **bool** | Flag. If `TRUE` removes traversal and relative dots (`..`, `.`) from input path. |
+
+
+**Return Value:**
+
+
+
+
+
+---
+### Utilities::outside_document_root
+
+Alias of inverted `self::not_outside_document_root` :D
+
+```php
+Utilities::outside_document_root( string path = "", string|null basePath = null, bool restrictDots = true ): bool
+```
+
+
+
+* This method is **static**.
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `path` | **string** |  |
+| `basePath` | **string\|null** |  |
+| `restrictDots` | **bool** |  |
+
+
+**Return Value:**
+
+
+
+
+
+---
+### Utilities::get_absolute_path
+
+Returns absolute path based on input. Does not verify whether the path exists or not.
+
+```php
+Utilities::get_absolute_path( string path ): string
+```
+
+Will recognize some structures in `$path` argument:
+* `.` - if place at beginning of variable, forms absolute path in relation to current directory.
+* `..` - skips to parent directory. If used on root being current directory, does nothing.
+* `\\` - if placed at beginning of variable, will treat as Windows network share
+* `/` - if placed at beginning of variable, forms absolute path in relation to root directory.
+
+Otherwise assumes `DOCUMENT_ROOT` as the base path.
+
+* This method is **static**.
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `path` | **string** | Path to parse. Will not recognize difference between `/` or `\`. |
 
 
 **Return Value:**

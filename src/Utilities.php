@@ -239,27 +239,34 @@ class Utilities {
      */
     static function copy_directory(string $from, string $to, bool $limitRoot = true, bool $restrictDots = true) : bool {
         $from = realpath(self::trim_path($from, $restrictDots));
-        $to   = realpath(self::trim_path($to,   $restrictDots));
-
+        $to   = self::trim_path($to,   $restrictDots);
+        // flag - check if in root
         if($limitRoot) {
             if(!self::not_outside_document_root($from) || !self::not_outside_document_root($to))
                 return false;
         }
 
+        // check if from path exists
         if(is_dir($from)) {
             $from = realpath($from);
             $to = rtrim(str_replace("/", "\\", self::trim_path($to)), "\\/");
             $check = [];
-            
-            if((!is_dir($to) && mkdir($to, fileperms($from), true)) || is_dir($to)) {
+
+            // check if to exists or can be created
+            if((!is_dir($to) 
+                && mkdir($to, fileperms($from), true)) 
+                || is_dir($to)) {
                 $files = self::GetFilesFromPath($from, false);
                 $directories = self::GetDirectoriesFromPath($from, true);
+
+                // copy files
                 foreach($files as $file) {
                     if(!copy($from . "/" . $file, $to . "/" . $file)) {
                         $check[] = "Could not copy " . $from . "/" . $file;
                     }
                 }
 
+                // copy directories (recursive)
                 foreach($directories as $directory) {
                     $directoryTo = trim(str_replace($from, "", $directory), "\\/");
                     if(!is_dir($to . "/". $directoryTo) && !mkdir($to . "/". $directoryTo)) {
@@ -526,25 +533,148 @@ class Utilities {
     }
 
     /**
+     * Retrieves modification time from given file.
+     *
+     * @param string $path Path to resource.
+     * @param boolean $formatted Switch whether should the moddate be formatted. If `true` will return as a formatted string (format depends on next argument), otherwise int datestamp.
+     * @param boolean $formatted If `formatted` set to true, if `true` will return as a `Y-m-d_His` formatted string, otherwise `Y-m-d, H:i:s` formatted string.
+     * @return string|int|false String or integer if found, false if file does not exist.
+     */
+    static function modTime(string $path, bool $formatted = false, bool $pathSafe = true) {
+        return 
+            file_exists($path)
+                ? (
+                    $formatted
+                        ? (
+                            $pathSafe
+                                ? date('Y-m-d_His', filemtime($path))
+                                : date('Y-m-d, H:i:s', filemtime($path))
+                          )
+                        : filemtime($path)
+                  )
+                : false;
+    }
+
+    /**
      * Checks if path is not outside of document root, as specified in *$_SERVER['DOCUMENT_ROOT']*.
      *
      * @param string $path Path to check.
+     * @param string|null $basePath Base path to check against. If `null` will use `$_SERVER['DOCUMENT_ROOT]` instead.
      * @param boolean $restrictDots Flag. If `TRUE` removes traversal and relative dots (`..`, `.`) from input path.
      * @return boolean
      */
-    static function not_outside_document_root(string $path = "", bool $restrictDots = true) : bool {
+    static function not_outside_document_root(string $path = "", ?string $basePath = null, bool $restrictDots = true) : bool {
         $path     = self::trim_path($path, $restrictDots);
         $path     = trim(preg_replace('/[\\/]+/', "/", $path));
         $realpath = realpath($path);
+        
+        $basePath = 
+            !is_null($basePath)
+                ? self::get_absolute_path($basePath)
+                : $_SERVER['DOCUMENT_ROOT'];
 
         return
             in_array($path, ["/", "\\"])
                 ? false
                 : (
-                    strpos($realpath, $_SERVER['DOCUMENT_ROOT']) !== 0
-                        ? false
-                        : true
+                    $realpath === false
+                        ? (
+                            strpos(strtolower(Utilities::get_absolute_path($path)), strtolower(str_replace(["/", "\\"], "/", $basePath))) !== 0
+                                ? false
+                                : true
+                          )
+                        : (
+                            strpos($realpath, $basePath) !== 0
+                                ? false
+                                : true
+                          )
                 );
+    }
+
+    /**
+     * Alias of inverted `self::not_outside_document_root` :D
+     *
+     * @param string $path
+     * @param string|null $basePath
+     * @param boolean $restrictDots
+     * @return boolean
+     */
+    static function outside_document_root(string $path = "", ?string $basePath = null, bool $restrictDots = true) : bool {
+        return !self::not_outside_document_root($path, $basePath, $restrictDots);
+    }
+
+    /**
+     * Returns absolute path based on input. Does not verify whether the path exists or not.
+     *
+     * Will recognize some structures in `$path` argument:
+     * * `.` - if place at beginning of variable, forms absolute path in relation to current directory.
+     * * `..` - skips to parent directory. If used on root being current directory, does nothing.
+     * * `\\` - if placed at beginning of variable, will treat as Windows network share
+     * * `/` - if placed at beginning of variable, forms absolute path in relation to root directory.
+     * 
+     * Otherwise assumes `DOCUMENT_ROOT` as the base path.
+     * 
+     * @param string $path Path to parse. Will not recognize difference between `/` or `\`.
+     * @return string
+     */
+    static function get_absolute_path(string $path) {
+        $pathOpt = preg_replace('/[\\/]+/', '/', $path);
+        $pathParts = explode("/", $pathOpt);
+
+        if(strpos($path, "\\\\") === 0) {
+            // windows network path
+            $pathParts[0] = "\\" . array_values(array_filter($pathParts))[0];
+        } else {
+            switch(trim($pathParts[0])) {
+                case "":
+                    // ROOT
+                    $root = explode("/", trim(str_replace(["/", "\\"], "/", realpath("/"))));
+                    unset($pathParts[0]);
+                    $pathParts = array_merge(
+                        $root,
+                        $pathParts
+                    );
+                    break;
+                case ".":
+                    // CURRENT DIR RELATIVE
+                    $root = explode("/", trim(str_replace(["/", "\\"], "/", $_SERVER['DOCUMENT_ROOT'])));
+                    unset($pathParts[0]);
+    
+                    $pathParts = array_merge(
+                        $root, 
+                        $pathParts
+                    );
+                    break;
+                case ( preg_match('/^[A-Za-z]+[:]/', trim($path)) ? true : false ):
+                    // DISK
+                    break;
+                default:
+                    // DOCUMENT ROOT
+                    $root = explode("/", trim(str_replace(["/", "\\"], "/", $_SERVER['DOCUMENT_ROOT'])));
+                    $pathParts = array_merge(
+                        $root, 
+                        $pathParts
+                    );
+                    break;
+            }
+        }
+        $pathParts = array_values(array_filter($pathParts));
+
+        $c = count($pathParts); $p = 0; $o = [];
+
+        for($i = 0; $i < $c; $i++) {
+            if($pathParts[$i] == "..") {
+                $p--;
+                if($p < 0) $p = 0;
+            } elseif($pathParts[$i] == ".") {
+                // nothing, pass (relative "here" handled only at beginning of the path)
+            }elseif(!trim(Utilities::empty($pathParts[$i]))) {
+                $o[$p] = $pathParts[$i];
+                $p++;
+            }
+        }
+
+        return implode( "/", array_slice(array_values(array_filter($o)), 0, $p == 0 ? 1 : $p) );
     }
 
     /**
@@ -588,7 +718,7 @@ class Utilities {
 
         // 2. check if outside root (if flag is bool true)
         $limitRoot
-            ? ( self::not_outside_document_root($path, $restrictDots)
+            ? ( self::not_outside_document_root($path, null, $restrictDots)
                     ? null
                     : $path = false )
             : null;
