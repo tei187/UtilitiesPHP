@@ -55,7 +55,7 @@ class Utilities {
     static function array_column_recursive(array $haystack, $needle) : array {
         $found = [];
         array_walk_recursive($haystack, function($value, $key) use (&$found, $needle) {
-            if ($key == $needle)
+            if ($key === $needle && !is_array($value))
                 $found[] = $value;
         });
         return $found;
