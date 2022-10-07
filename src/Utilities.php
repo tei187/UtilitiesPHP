@@ -287,6 +287,14 @@ class Utilities {
                 : false;
     }
 
+    static function CheckDirectoryCreate(string $path, $permissions = 0777, bool $recursive = true) : bool {
+        if(is_dir($path)) {
+            return true;
+        } else {
+            return mkdir($path, $permissions, $recursive);
+        }
+    }
+
     /**
      * Returns true only on `null` type, `string` with length of 0 characters (after trimming), or arrays containing arrays with no items, or items only `null` type and `string` with 0 chars length (after trimming). Other types are automatically being considered not empty.
      *
