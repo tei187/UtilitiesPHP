@@ -2,3 +2,4 @@
 phpDocumentor.phar
 .phpdoc/
 docs/
+*test*

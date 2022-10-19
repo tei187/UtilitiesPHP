@@ -12,10 +12,12 @@
 | [Utilities::array_filter_values_recursive](#Utilitiesarray_filter_values_recursive) | Filters values obtained recurisvely from an array. |
 | [Utilities::array_map_recursive](#Utilitiesarray_map_recursive) | Recursive `array_map()` function. |
 | [Utilities::array_only_bool_true](#Utilitiesarray_only_bool_true) | Checks if every value in array is a `true` boolean type. |
+| [Utilities::array_unique_recursive](#Utilitiesarray_unique_recursive) | Removes duplicate values from an array recursively. |
 | [Utilities::array_values_not_null](#Utilitiesarray_values_not_null) | Recursively check if any of the values is empty. |
 | [Utilities::array_values_recursive](#Utilitiesarray_values_recursive) | Lists values in array recursively. |
 | [Utilities::array_keys_exist](#Utilitiesarray_keys_exist) | Check if all passed keys exist in array. |
 | [Utilities::copy_directory](#Utilitiescopy_directory) | Copy directory with files from one path to another. |
+| [Utilities::CheckDirectoryCreate](#UtilitiesCheckDirectoryCreate) | Checks if directory path exists. If does not, attempts to create one. |
 | [Utilities::empty](#Utilitiesempty) | Returns true only on `null` type, `string` with length of 0 characters (after trimming), or arrays containing arrays with no items, or items only `null` type and `string` with 0 chars length (after trimming). Other types are automatically being considered not empty. |
 | [Utilities::EncodeEmail](#UtilitiesEncodeEmail) | Encodes email address to entities. |
 | [Utilities::file_exists_suggest](#Utilitiesfile_exists_suggest) | Filename suggestion if path already used. |
@@ -230,6 +232,39 @@ Utilities::array_only_bool_true( array array ): bool
 
 
 ---
+### Utilities::array_unique_recursive
+
+Removes duplicate values from an array recursively.
+
+```php
+Utilities::array_unique_recursive( array array, int flags = SORT_REGULAR, bool strict = false ): array
+```
+
+
+
+* This method is **static**.
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `array` | **array** | The input array. |
+| `flags` | **int** | The optional second parameter sort_flags may be used to modify the sorting behavior using these values:
+
+Sorting type flags:
+* SORT_REGULAR - compare items normally (don&#039;t change types)
+* SORT_NUMERIC - compare items numerically
+* SORT_STRING - compare items as strings
+* SORT_LOCALE_STRING - compare items as strings, based on the current locale |
+| `strict` | **bool** | If the third parameter strict is set to true then function will also check the types of items in array. By default FALSE. |
+
+
+**Return Value:**
+
+
+
+
+
+---
 ### Utilities::array_values_not_null
 
 Recursively check if any of the values is empty.
@@ -333,6 +368,33 @@ Utilities::copy_directory( string from, string to, bool limitRoot = true, bool r
 **Return Value:**
 
 
+
+
+
+---
+### Utilities::CheckDirectoryCreate
+
+Checks if directory path exists. If does not, attempts to create one.
+
+```php
+Utilities::CheckDirectoryCreate( string path, int permissions = 0777, bool recursive = true ): bool
+```
+
+
+
+* This method is **static**.
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `path` | **string** |  |
+| `permissions` | **int** |  |
+| `recursive` | **bool** |  |
+
+
+**Return Value:**
+
+Returns TRUE if exists or if successfully created, otherwise FALSE.
 
 
 

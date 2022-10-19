@@ -162,6 +162,48 @@ class Utilities {
     }
 
     /**
+     * Removes duplicate values from an array recursively.
+     *
+     * @param array $array The input array.
+     * @param int $flags The optional second parameter sort_flags may be used to modify the sorting behavior using these values:
+     * 
+     * Sorting type flags:
+     * * SORT_REGULAR - compare items normally (don't change types)
+     * * SORT_NUMERIC - compare items numerically
+     * * SORT_STRING - compare items as strings
+     * * SORT_LOCALE_STRING - compare items as strings, based on the current locale
+     * @param boolean $strict If the third parameter strict is set to true then function will also check the types of items in array. By default FALSE.
+     * @return array
+     */
+    static function array_unique_recursive(array $array, int $flags = SORT_REGULAR, bool $strict = false) {
+        $arraysWithin = [];
+        $other = [];
+        $outcome = [];
+        foreach($array as $k => $item) {
+            if(is_array($item)) {
+                $arraysWithin[$k] = $item;
+            } elseif(is_object($item) || is_resource($item)) {
+                $other[$k] = $item;
+            } elseif(in_array( strtolower(gettype($item)), [ "string", "integer", "float", "double", "boolean" ] )) {
+                !in_array($item, $outcome, $strict)
+                    ? $outcome[$k] = $item
+                    : null;
+            }
+        }
+
+        //var_dump([ 'within' => $arraysWithin, 'other' => $other, 'outcome' => $outcome ]);
+
+        foreach($arraysWithin as $k => $arrayWithin) {
+            $outcome[$k] = self::array_unique_recursive($arrayWithin, $flags, $strict);
+        }
+
+        $outcome = array_merge($outcome, $other);
+        asort($outcome, $flags);
+
+        return $outcome;
+    }
+
+    /**
      * Recursively check if any of the values is empty.
      *
      * @todo what is this all about? something is off with forach and $output
@@ -287,6 +329,14 @@ class Utilities {
                 : false;
     }
 
+    /**
+     * Checks if directory path exists. If does not, attempts to create one.
+     *
+     * @param string $path
+     * @param integer $permissions
+     * @param boolean $recursive
+     * @return boolean Returns TRUE if exists or if successfully created, otherwise FALSE.
+     */
     static function CheckDirectoryCreate(string $path, $permissions = 0777, bool $recursive = true) : bool {
         if(is_dir($path)) {
             return true;
