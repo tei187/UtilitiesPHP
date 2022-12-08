@@ -766,13 +766,19 @@ class Utilities {
      *
      * @param mixed $path Path.
      * @param string[] $blacklist Array with paths that should be blacklisted and not used with function (e.g. system root). Very important to set up if `limitRoot` parameter is set to FALSE.
-     * @param boolean $limitRoot Flag. If TRUE will check if the script is in scope of document root.
+     * @param boolean $limitRoot Flag. If TRUE will check if the path is in scope of document root.
      * @param boolean $restrictDots Flag. If TRUE removes traversal and relative dots (`..`, `.`) from input path.
-     * @return void
+     * @return false|void Returns false if trying to access root (Unix root or Windows disk).
      */
     static function rmdir_files_recursive($path, array $blacklist = [], bool $limitRoot = true, bool $restrictDots = true) {
-        // 1. standarize path
+
+        // 0. standarize path
         $path = realpath(self::trim_path($path, $restrictDots));
+
+        // 1. stop if $path is root direct
+        preg_match_all('/^[A-Za-z]+[:]{1}[\/\\\\]{0,1}\s*$/m', $path, $rootMatches);
+        if(in_array($path, ["\\", "/"]) || count($rootMatches[0]) > 0)
+            return false;
 
         // 2. check if outside root (if flag is bool true)
         $limitRoot
