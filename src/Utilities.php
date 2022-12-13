@@ -346,6 +346,19 @@ class Utilities {
     }
 
     /**
+     * Supposedly checks if passed string is proper RegEx string :D
+     *
+     * @param string $pattern
+     * @return boolean
+     */
+    static function check_if_regex(string $pattern) : bool {
+        return 
+            @preg_match($pattern, null) === false
+                ? false
+                : true;
+    }
+
+    /**
      * Returns true only on `null` type, `string` with length of 0 characters (after trimming), or arrays containing arrays with no items, or items only `null` type and `string` with 0 chars length (after trimming). Other types are automatically being considered not empty.
      *
      * @param mixed $val Value to evaluate if empty.
@@ -893,9 +906,76 @@ class Utilities {
      * Validates email address.
      *
      * @param string $email Email address.
+     * @param string $checkDomain If true, checks if domain has a dot in it.
      * @return string|false
      */
-    static function ValidateEmail(string $email) {
+    static function ValidateEmail(string $email, bool $checkDomain = true) {
+        if($checkDomain) {
+            $x = explode("@", trim($email));
+            if(count($x) == 2) {
+                if(strpos($x[1], ".") === false) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+        
         return filter_var($email, FILTER_VALIDATE_EMAIL);
+    }
+
+    /**
+     * Validates email address by more specific checks.
+     *
+     * @param string $email Email address to test.
+     * @param null|string $accountRegEx Regular expression, if a specific username structure is expected (like `f.lastname` => `/[a-z]{1}[.]{1}[a-z]+/`). If NULL, skips.
+     * @param null|string|array $domain A string containing domain name, array of domain names or regular expression string to check against. If NULL, skips.
+     * @return string|false 
+     */
+    static function ValidateEmailExt(string $email, ?string $accountRegEx = null, $domain = null) {
+        $check = ['domain' => null, 'account' => null, 'validate' => null];
+        $x = explode("@", $email);
+        if(count($x) == 2 && (!is_null($accountRegEx) || !is_null($domain))) {
+            // check user
+            if(self::check_if_regex($accountRegEx)) {         
+                switch(preg_match($accountRegEx, $x[0])) {
+                    case 0: $check['account'] = 0; break;
+                    case 1: $check['account'] = 1; break;
+                }
+            } else {
+                $check['account'] = 0;
+            }
+            // check domain
+            if(self::check_if_regex($domain)) {
+                switch(preg_match($domain, $x[1])) {
+                    case 0: $check['domain'] = 0; break;
+                    case 1: $check['domain'] = 1; break;
+                }
+            } elseif(is_string($domain) && !is_null($domain)) {
+                $check['domain'] = ($x[1] == $domain) ? 1 : 0;
+            } elseif(is_array($domain) && !empty($domain)) {
+                $check['domain'] = (in_array($x[1], $domain)) ? 1 : 0;
+            } elseif(is_null($domain)) {
+                $check['domain'] = 1;
+            } else {
+                $check['domain'] = 0;
+            }
+        } else {
+            $check['domain'] = 1;
+            $check['account'] = 1;
+        }
+
+        $validate = filter_var($email, FILTER_VALIDATE_EMAIL);
+
+        if($validate === false) {
+            $check['validate'] = 0;
+            return false;
+        } else {
+            $check['validate'] = 1;
+            return
+                array_sum($check) == 3
+                    ? $validate
+                    : false;
+        }
     }
 }

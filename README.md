@@ -40,6 +40,7 @@
 | [Utilities::scandir_clean_files](#Utilitiesscandir_clean_files) |  |
 | [Utilities::trim_path](#Utilitiestrim_path) | Trims and removes errorenous path parts, forbids relative directory tree traversal. |
 | [Utilities::ValidateEmail](#UtilitiesValidateEmail) | Validates email address. |
+| [Utilities::ValidateEmailExt](#UtilitiesValidateEmailExt) | Validates email address by more specific checks. |
 
 ## Utilities
 
@@ -248,7 +249,13 @@ Utilities::array_unique_recursive( array array, int flags = SORT_REGULAR, bool s
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `array` | **array** | The input array. |
-| `flags` | **int** | The optional second parameter sort_flags may be used to modify the sorting behavior using these values:<br>Sorting type flags:<br>- SORT_REGULAR - compare items normally (don&#039;t change types)<br>- SORT_NUMERIC - compare items numerically<br>- SORT_STRING - compare items as strings<br>- SORT_LOCALE_STRING - compare items as strings, based on the current locale |
+| `flags` | **int** | The optional second parameter sort_flags may be used to modify the sorting behavior using these values:
+
+Sorting type flags:
+* SORT_REGULAR - compare items normally (don&#039;t change types)
+* SORT_NUMERIC - compare items numerically
+* SORT_STRING - compare items as strings
+* SORT_LOCALE_STRING - compare items as strings, based on the current locale |
 | `strict` | **bool** | If the third parameter strict is set to true then function will also check the types of items in array. By default FALSE. |
 
 
@@ -788,7 +795,7 @@ Utilities::proper_property_name( string name ): bool
 Removes files and directories recursively.
 
 ```php
-Utilities::rmdir_files_recursive( mixed path, string[] blacklist = [], bool limitRoot = true, bool restrictDots = true ): void
+Utilities::rmdir_files_recursive( mixed path, string[] blacklist = [], bool limitRoot = true, bool restrictDots = true ): false|void
 ```
 
 
@@ -800,13 +807,13 @@ Utilities::rmdir_files_recursive( mixed path, string[] blacklist = [], bool limi
 |-----------|------|-------------|
 | `path` | **mixed** | Path. |
 | `blacklist` | **string[]** | Array with paths that should be blacklisted and not used with function (e.g. system root). Very important to set up if `limitRoot` parameter is set to FALSE. |
-| `limitRoot` | **bool** | Flag. If TRUE will check if the script is in scope of document root. |
+| `limitRoot` | **bool** | Flag. If TRUE will check if the path is in scope of document root. |
 | `restrictDots` | **bool** | Flag. If TRUE removes traversal and relative dots (`..`, `.`) from input path. |
 
 
 **Return Value:**
 
-
+Returns false if trying to access root (Unix root or Windows disk).
 
 
 
@@ -953,7 +960,7 @@ Utilities::trim_path( string path, bool restrictDots = true ): mixed|string
 Validates email address.
 
 ```php
-Utilities::ValidateEmail( string email ): string|false
+Utilities::ValidateEmail( string email, string checkDomain = true ): string|false
 ```
 
 
@@ -964,6 +971,34 @@ Utilities::ValidateEmail( string email ): string|false
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `email` | **string** | Email address. |
+| `checkDomain` | **string** | If true, checks if domain has a dot in it. |
+
+
+**Return Value:**
+
+
+
+
+
+---
+### Utilities::ValidateEmailExt
+
+Validates email address by more specific checks.
+
+```php
+Utilities::ValidateEmailExt( string email, null|string accountRegEx = null, null|string|array domain = null ): string|false
+```
+
+
+
+* This method is **static**.
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `email` | **string** | Email address to test. |
+| `accountRegEx` | **null\|string** | Regular expression, if a specific username structure is expected (like `f.lastname` =&gt; `/[a-z]{1}[.]{1}[a-z]+/`). If NULL, skips. |
+| `domain` | **null\|string\|array** | A string containing domain name, array of domain names or regular expression string to check against. If NULL, skips. |
 
 
 **Return Value:**
