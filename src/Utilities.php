@@ -987,6 +987,9 @@ class Utilities {
      */
     static function array_average(array $array) {
         $numeric = array_filter($array, 'is_numeric');
-        return array_sum($numeric) / count($numeric);
+        
+        return count($numeric) > 0
+            ? array_sum($numeric) / count($numeric)
+            : 0;
     }
 }
