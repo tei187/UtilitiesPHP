@@ -978,4 +978,15 @@ class Utilities {
                     : false;
         }
     }
+
+    /**
+     * Counts average from numeric values.
+     *
+     * @param array $array
+     * @return int|float
+     */
+    static function array_average(array $array) {
+        $numeric = array_filter($array, 'is_numeric');
+        return array_sum($numeric) / count($numeric);
+    }
 }
